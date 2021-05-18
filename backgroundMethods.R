@@ -191,6 +191,12 @@ findBackground_Packer_Method <- function(inputCellCDS, inputBackgroundCDS,
         ){
     set.seed(17)
 
+    # DFR Edit. Not strictly necessary but often the BBI pipeline output will calc size factors automatically for a full CDS. 
+    #     If done over all cells (including low UMI empty drops) this can lead to poor normalization via scale_factors.
+    #     Re-estimate here to avoid accidentally running with poorly-scaled size_factors
+    inputCellCDS <- estimate_size_factors(inputCellCDS)
+    inputBackgroundCDS <- estimate_size_factors(inputBackgroundCDS)
+
     backgroundList <- getBackgroundList(inputBackgroundCDS)
 
     print("Getting PCA for cells")
@@ -211,6 +217,9 @@ findBackground_Packer_Method <- function(inputCellCDS, inputBackgroundCDS,
     if (returnOnlyMatrix){
             return(bgNormPCA)
         } else{
+            # Have already run estimate_size factors above. Now just need to add the corrected 
+            #    expression data into the PCA slot for the inputCellCDS
+             reducedDims(inputCellCDS)[["PCA"]] = bgNormPCA
              return( list("CDS"=inputCellCDS, "topDimPCA" = topDimPCA,
          "bgNormPCA"=bgNormPCA, "backgroundProjections" = backgroundProjections ))
         }
